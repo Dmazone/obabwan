@@ -165,14 +165,16 @@
       coupangDeepLinkTemplate: '', // 발급된 파트너스 URL에서 검색어 위치를 {query}로 지정
       geminiEndpoint: '' // API 키를 보관하는 서버리스 프록시 URL
     });
-    const PRESETS = Object.freeze({
-      '추천': ['김치찌개','돈가스','초밥','파스타','제육볶음','마라탕'],
-      '한식': ['삼겹살','김치찌개','제육볶음','닭갈비','국밥','칼국수'],
-      '배달': ['치킨','피자','족발','떡볶이','햄버거','마라탕'],
-      '회식': ['삼겹살','소고기','회','곱창','닭갈비','조개구이'],
-      '가볍게': ['샐러드','포케','김밥','샌드위치','쌀국수','메밀소바']
+    const DEFAULT_ITEMS = Object.freeze(['김치찌개','돈가스','초밥','파스타','제육볶음','마라탕']);
+    const PRESET_POOLS = Object.freeze({
+      '한식': Object.freeze(['김치찌개','된장찌개','제육볶음','불고기','비빔밥','순두부찌개','부대찌개','삼겹살','갈비탕','설렁탕','감자탕','닭갈비','보쌈','냉면','칼국수','수제비','육개장','청국장','쌈밥','낙지볶음','오징어볶음','갈비찜','닭볶음탕','곰탕','콩나물국밥']),
+      '배달': Object.freeze(['후라이드치킨','양념치킨','페퍼로니피자','고구마피자','햄버거','떡볶이','순대','마라탕','마라샹궈','짜장면','짬뽕','탕수육','초밥','회덮밥','돈가스','우동','쌀국수','팟타이','카레','토스트','샌드위치','핫도그','찜닭','닭강정','아구찜']),
+      '회식': Object.freeze(['소갈비','돼지갈비','곱창구이','대창구이','막창구이','광어회','참치회','모둠조개구이','장어구이','오리주물럭','양꼬치','훠궈','샤브샤브','전골','해물탕','매운탕','골뱅이무침','파전','두부김치','닭발','오돌뼈','감바스','스테이크','바비큐폭립','철판요리']),
+      '가볍게': Object.freeze(['샐러드','연어포케','참치포케','닭가슴살볼','그릭요거트','아사이볼','메밀소바','월남쌈','두부샐러드','곤약비빔면','유부초밥','김밥','주먹밥','오니기리','죽','오트밀','베이글','브런치플레이트','과일도시락','에그샌드위치','후무스랩','타코','부리토볼','콩국수','묵사발'])
     });
-    const DEFAULT_STATE = Object.freeze({ title:'오늘 뭐 먹지?', items:Object.freeze([...PRESETS['추천']]) });
+    const PRESET_NAMES = Object.freeze(['추천',...Object.keys(PRESET_POOLS)]);
+    const ALL_MENU_POOL = Object.freeze(Object.values(PRESET_POOLS).flat());
+    const DEFAULT_STATE = Object.freeze({ title:'오늘 뭐 먹지?', items:DEFAULT_ITEMS });
     const COLORS = Object.freeze(['#f97316','#fbbf24','#4ade80','#38bdf8','#a78bfa','#fb7185','#2dd4bf','#f472b6','#84cc16','#60a5fa','#c084fc','#fb923c']);
     const TAU = Math.PI * 2;
     const STOP_SPEED = 0.001;
@@ -203,6 +205,7 @@
     const toastNode = $('#toast');
 
     let state = readUrlState();
+    let activePreset = sameItems(state.items,DEFAULT_ITEMS)?'추천':'';
     let rotation = 0;
     let velocity = 0;
     let deceleration = 0;
@@ -233,6 +236,26 @@
       }).slice(0,MAX_ITEMS);
     }
 
+    function sameItems(left,right) {
+      return left.length===right.length&&left.every((item,index)=>item===right[index]);
+    }
+
+    function randomSample(pool,count,currentItems=[]) {
+      const shuffled=[...pool];
+      for(let index=shuffled.length-1;index>0;index-=1) {
+        const swapIndex=Math.floor(Math.random()*(index+1));
+        [shuffled[index],shuffled[swapIndex]]=[shuffled[swapIndex],shuffled[index]];
+      }
+      const sample=shuffled.slice(0,Math.min(count,shuffled.length));
+      const currentSet=new Set(currentItems);
+      const sameSelection=sample.length===currentItems.length&&sample.every((item)=>currentSet.has(item));
+      if(sameSelection) {
+        const replacement=shuffled.find((item)=>!currentSet.has(item));
+        if(replacement) sample[sample.length-1]=replacement;
+      }
+      return sample;
+    }
+
     function validState(candidate) {
       const items=parseItems(Array.isArray(candidate.items)?candidate.items.join(','):candidate.items);
       return { title:safeText(candidate.title,40)||DEFAULT_STATE.title, items:items.length>=2?items:[...DEFAULT_STATE.items] };
@@ -244,9 +267,7 @@
     }
 
     function stateUrl(nextState) {
-      const isDefault = nextState.title===DEFAULT_STATE.title
-        && nextState.items.length===DEFAULT_STATE.items.length
-        && nextState.items.every((item,index)=>item===DEFAULT_STATE.items[index]);
+      const isDefault = nextState.title===DEFAULT_STATE.title&&sameItems(nextState.items,DEFAULT_STATE.items);
       if(isDefault) return './';
       const params=new URLSearchParams();
       params.set('title',nextState.title);
@@ -254,8 +275,9 @@
       return `./?${params.toString()}`;
     }
 
-    function commitState(nextState,{push=true,notice=''}={}) {
+    function commitState(nextState,{push=true,notice='',preset=null}={}) {
       state=validState(nextState);
+      if(preset!==null) activePreset=preset;
       const historyState={title:state.title,items:[...state.items]};
       if(push) history.pushState(historyState,'',stateUrl(state));
       else history.replaceState(historyState,'',stateUrl(state));
@@ -290,18 +312,25 @@
 
     function renderPresets() {
       const list=$('#preset-list');
-      Object.entries(PRESETS).forEach(([name,items])=>{
+      PRESET_NAMES.forEach((name)=>{
         const button=document.createElement('button');
         button.type='button'; button.className='preset'; button.textContent=name; button.dataset.preset=name;
-        button.addEventListener('click',()=>commitState({title:state.title,items},{notice:`${name} 메뉴로 바꿨어요`}));
+        button.addEventListener('click',()=>applyPreset(name));
         list.appendChild(button);
       });
     }
 
+    function applyPreset(name) {
+      const isRecommendation=name==='추천';
+      const pool=isRecommendation?ALL_MENU_POOL:PRESET_POOLS[name];
+      const count=isRecommendation?6:8;
+      const items=randomSample(pool,count,state.items);
+      commitState({title:state.title,items},{preset:name,notice:`${name} 메뉴 ${count}개를 새로 뽑았어요`});
+    }
+
     function updatePresetSelection() {
       document.querySelectorAll('.preset').forEach((button)=>{
-        const preset=PRESETS[button.dataset.preset];
-        button.setAttribute('aria-pressed',String(preset.length===state.items.length&&preset.every((item,index)=>item===state.items[index])));
+        button.setAttribute('aria-pressed',String(button.dataset.preset===activePreset));
       });
     }
 
@@ -313,13 +342,13 @@
       additions.forEach((item)=>{ if(merged.length<MAX_ITEMS&&!existing.has(item.toLocaleLowerCase('ko-KR'))){ merged.push(item); existing.add(item.toLocaleLowerCase('ko-KR')); } });
       if(merged.length===state.items.length) { showToast(state.items.length>=MAX_ITEMS?'메뉴는 최대 10개예요':'이미 들어 있는 메뉴예요'); return; }
       inputNode.value='';
-      commitState({title:state.title,items:merged},{notice:`${merged.length-state.items.length}개 메뉴를 추가했어요`});
+      commitState({title:state.title,items:merged},{preset:'',notice:`${merged.length-state.items.length}개 메뉴를 추가했어요`});
     }
 
     function removeItem(index) {
       if(state.items.length<=2) { showToast('룰렛에는 메뉴가 최소 2개 필요해요'); return; }
       const items=state.items.filter((_,itemIndex)=>itemIndex!==index);
-      commitState({title:state.title,items});
+      commitState({title:state.title,items},{preset:''});
     }
 
     function createBakeSurface(width,height) {
@@ -504,11 +533,11 @@
       if(resetStatus) statusNode.textContent='준비 완료';
     }
 
-    function restoreNavigation() { cleanupRuntime(); closeResult(); state=readUrlState(); renderState(); }
+    function restoreNavigation() { cleanupRuntime(); closeResult(); state=readUrlState(); activePreset=sameItems(state.items,DEFAULT_ITEMS)?'추천':''; renderState(); }
 
     renderPresets(); renderState(); history.replaceState({title:state.title,items:[...state.items]},'',stateUrl(state));
     $('#quick-add-form').addEventListener('submit',(event)=>{event.preventDefault();addItems(inputNode.value);});
-    $('#reset-button').addEventListener('click',()=>commitState({title:DEFAULT_STATE.title,items:[...DEFAULT_STATE.items]},{notice:'기본 메뉴로 초기화했어요'}));
+    $('#reset-button').addEventListener('click',()=>commitState({title:DEFAULT_STATE.title,items:[...DEFAULT_STATE.items]},{preset:'추천',notice:'기본 메뉴로 초기화했어요'}));
     spinButton.addEventListener('click',startRouletteSequence);
     wheelShell.addEventListener('pointerdown',applyBrake);
     wheelShell.addEventListener('keydown',(event)=>{if(isSpinning&&(event.key==='Enter'||event.key===' '))applyBrake(event);});
