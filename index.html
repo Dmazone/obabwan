@@ -244,6 +244,10 @@
     }
 
     function stateUrl(nextState) {
+      const isDefault = nextState.title===DEFAULT_STATE.title
+        && nextState.items.length===DEFAULT_STATE.items.length
+        && nextState.items.every((item,index)=>item===DEFAULT_STATE.items[index]);
+      if(isDefault) return './';
       const params=new URLSearchParams();
       params.set('title',nextState.title);
       params.set('items',nextState.items.join(','));
