@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#fff8ef">
+  <meta name="description" content="메뉴는 고민 말고 룰렛으로. 오밥완에서 오늘 메뉴를 골라보세요.">
+  <meta property="og:title" content="오밥완 (obabwan)">
+  <meta property="og:description" content="오늘 모임 메뉴는 무엇? 메뉴 룰렛을 돌려보세요.">
+  <meta property="og:url" content="https://dmazone.github.io/obabwan/">
+  <meta property="og:type" content="website">
+  <title>오밥완 — 오늘 메뉴 선택 완료</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    :root { color-scheme: light; font-family: Pretendard, "Noto Sans KR", system-ui, sans-serif; --ink:#211c18; --orange:#f25f24; --cream:#fff8ef; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--cream); color:var(--ink); }
+    button,input { font:inherit; }
+    button { -webkit-tap-highlight-color:transparent; }
+    .app { min-height:100dvh; width:100%; overflow-x:hidden; padding:max(18px,env(safe-area-inset-top)) 18px max(22px,env(safe-area-inset-bottom)); background:radial-gradient(circle at 50% -15%,#ffd7b5 0,transparent 38%); }
+    .wrap { width:min(100%,460px); margin:0 auto; }
+    .header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .eyebrow { margin:0 0 4px; color:var(--orange); font-size:11px; font-weight:900; letter-spacing:.18em; }
+    #group-title { display:inline-block; max-width:310px; margin:0; border-bottom:2px dashed transparent; font-size:clamp(25px,7vw,34px); font-weight:950; line-height:1.15; outline:none; overflow-wrap:anywhere; }
+    #group-title:focus { border-color:#fb923c; background:#fff7ed; }
+    .edit-hint { margin:5px 0 0; color:#a8a29e; font-size:11px; }
+    .icon-button { flex:none; border:1px solid #fed7aa; border-radius:14px; background:#fff; padding:10px 12px; color:#9a3412; font-weight:800; cursor:pointer; }
+    .wheel-area { display:flex; flex-direction:column; align-items:center; margin:14px 0 10px; }
+    .wheel-shell { position:relative; width:min(72vw,310px); aspect-ratio:1; border-radius:50%; }
+    .wheel-shell.is-spinning { cursor:pointer; touch-action:manipulation; animation:wheelGlow .8s ease-in-out infinite alternate; }
+    .wheel-shell.brake-hit { transform:scale(.975); }
+    @keyframes wheelGlow { from { box-shadow:0 0 0 0 rgb(249 115 22 / 0); } to { box-shadow:0 0 0 10px rgb(249 115 22 / .12); } }
+    #wheel { display:block; width:100%; height:100%; filter:drop-shadow(0 16px 18px rgb(124 45 18 / .2)); }
+    .pointer { position:absolute; z-index:2; top:-5px; left:50%; width:0; height:0; transform:translateX(-50%); border-left:15px solid transparent; border-right:15px solid transparent; border-top:28px solid #292524; filter:drop-shadow(0 2px 2px rgb(0 0 0 / .22)); }
+    #status { min-height:27px; margin:10px 0 0; font-size:17px; font-weight:900; }
+    .panel { margin-top:12px; border:1px solid #ffedd5; border-radius:22px; background:rgb(255 255 255 / .82); padding:15px; box-shadow:0 8px 24px rgb(124 45 18 / .06); backdrop-filter:blur(8px); }
+    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .panel-title { margin:0; font-size:14px; font-weight:900; }
+    #menu-count { color:#ea580c; font-size:12px; font-weight:800; }
+    .presets { display:flex; gap:7px; overflow-x:auto; padding:1px 1px 9px; scrollbar-width:none; }
+    .presets::-webkit-scrollbar { display:none; }
+    .preset { flex:none; border:1px solid #fed7aa; border-radius:999px; background:#fff7ed; padding:7px 12px; color:#9a3412; font-size:12px; font-weight:850; cursor:pointer; }
+    .preset[aria-pressed="true"] { border-color:#f97316; background:#f97316; color:#fff; }
+    #menu-tags { display:flex; min-height:38px; max-height:82px; flex-wrap:wrap; gap:7px; overflow-y:auto; align-content:flex-start; }
+    .menu-tag { display:inline-flex; align-items:center; gap:5px; border:1px solid #fed7aa; border-radius:999px; background:#fff; padding:6px 7px 6px 10px; color:#9a3412; font-size:12px; font-weight:800; }
+    .tag-remove { display:grid; width:19px; height:19px; place-items:center; border:0; border-radius:50%; background:#ffedd5; color:#c2410c; line-height:1; cursor:pointer; }
+    .quick-add { display:flex; gap:7px; margin-top:11px; }
+    #menu-input { min-width:0; flex:1; border:1px solid #e7e5e4; border-radius:13px; background:#fafaf9; padding:10px 12px; outline:none; font-size:13px; }
+    #menu-input:focus { border-color:#fb923c; background:#fff; box-shadow:0 0 0 3px #ffedd5; }
+    #add-button { flex:none; border:0; border-radius:13px; background:#292524; padding:0 16px; color:#fff; font-size:13px; font-weight:900; cursor:pointer; }
+    .helper { margin:7px 1px 0; color:#a8a29e; font-size:10px; }
+    .actions { display:grid; grid-template-columns:1fr auto; gap:8px; margin-top:12px; }
+    #spin-button { border:0; border-radius:18px; background:linear-gradient(135deg,#fb923c,#ef4444); padding:15px 18px; color:#fff; font-size:17px; font-weight:950; box-shadow:0 9px 20px rgb(249 115 22 / .25); cursor:pointer; }
+    #spin-button:active,.icon-button:active,.preset:active,#add-button:active { transform:scale(.98); }
+    #spin-button:disabled { background:#d6d3d1; box-shadow:none; cursor:not-allowed; }
+    #share-button { border:1px solid #facc15; border-radius:18px; background:#fde047; padding:0 16px; color:#422006; font-size:14px; font-weight:900; cursor:pointer; }
+    .history { margin:14px 2px 0; }
+    .history summary { color:#78716c; font-size:12px; font-weight:800; cursor:pointer; }
+    #history-list { display:flex; gap:7px; margin:8px 0 0; padding:0; overflow-x:auto; list-style:none; }
+    #history-list li { flex:none; border-radius:999px; background:#292524; padding:6px 10px; color:#fff; font-size:11px; }
+    .modal { position:fixed; inset:0; z-index:70; display:grid; place-items:center; padding:22px; background:rgb(28 25 23 / .68); opacity:1; transition:opacity .18s ease; }
+    .modal[hidden] { display:none; }
+    .result-card { width:min(100%,380px); max-height:90dvh; overflow-y:auto; border-radius:28px; background:#fff; padding:26px 22px 20px; text-align:center; box-shadow:0 24px 80px rgb(0 0 0 / .28); }
+    .result-badge { display:inline-block; border-radius:999px; background:#ffedd5; padding:6px 10px; color:#c2410c; font-size:11px; font-weight:900; letter-spacing:.12em; }
+    #result-menu { margin:10px 0 3px; font-size:34px; font-weight:950; overflow-wrap:anywhere; }
+    .prescription { margin:17px 0; border:1px solid #ffedd5; border-radius:17px; background:#fffaf5; padding:14px; text-align:left; }
+    .prescription strong { color:#ea580c; font-size:12px; }
+    #ai-prescription { margin:6px 0 0; color:#57534e; font-size:13px; line-height:1.6; }
+    #coupang-link { display:block; border-radius:14px; background:#0284c7; padding:12px; color:#fff; font-size:13px; font-weight:900; text-decoration:none; }
+    #coupang-link[hidden] { display:none; }
+    #close-result { width:100%; margin-top:9px; border:0; background:transparent; padding:10px; color:#78716c; font-size:12px; text-decoration:underline; cursor:pointer; }
+    #toast { position:fixed; z-index:100; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%); width:max-content; max-width:calc(100% - 36px); border-radius:999px; background:#292524; padding:10px 15px; color:#fff; font-size:12px; font-weight:800; box-shadow:0 8px 25px rgb(0 0 0 / .2); }
+    #spin-live[hidden],#menu-editor[hidden] { display:none; }
+    .spin-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .spin-title { font-size:14px; font-weight:950; }
+    #brake-label { color:#ea580c; font-size:12px; font-weight:900; }
+    #brake-gauge { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:9px 0 11px; }
+    #brake-gauge span { height:8px; border-radius:999px; background:#e7e5e4; transition:background .12s ease,transform .12s ease; }
+    #brake-gauge span.active { background:linear-gradient(90deg,#fb923c,#ef4444); transform:scaleY(1.35); }
+    .spin-help { margin:8px 0 0; text-align:center; color:#78716c; font-size:11px; font-weight:750; }
+    #ad-slot { position:relative; height:74px; overflow:hidden; border:1px solid #e7e5e4; border-radius:13px; visibility:hidden; opacity:0; background:#f5f5f4; transition:opacity .15s ease; }
+    #ad-slot[data-visible="true"] { visibility:visible; opacity:1; }
+    #ad-slot iframe { display:block; width:100%; height:100%; border:0; }
+    .ad-placeholder { display:grid; width:100%; height:100%; place-items:center; color:#a8a29e; font-size:10px; font-weight:800; letter-spacing:.08em; }
+    @media (max-height:760px) { .app { padding-top:12px; } .wheel-shell { width:min(58vw,240px); } .panel { margin-top:7px; padding:12px; } .wheel-area { margin:8px 0 5px; } }
+    @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="wrap">
+      <header class="header">
+        <div>
+          <p class="eyebrow">OBABWAN · TODAY'S MENU</p>
+          <h1 id="group-title" contenteditable="true" role="textbox" aria-label="모임 이름" spellcheck="false">오늘 뭐 먹지?</h1>
+          <p class="edit-hint">제목을 누르면 바로 바꿀 수 있어요</p>
+        </div>
+        <button id="reset-button" class="icon-button" type="button" aria-label="기본 메뉴로 초기화">초기화</button>
+      </header>
+
+      <section class="wheel-area" aria-label="메뉴 룰렛">
+        <div id="wheel-shell" class="wheel-shell" role="button" tabindex="0" aria-label="회전 중 누르면 단계별로 감속합니다">
+          <div class="pointer" aria-hidden="true"></div>
+          <canvas id="wheel" role="img" aria-label="메뉴 선택 룰렛"></canvas>
+        </div>
+        <p id="status" aria-live="polite">준비 완료</p>
+      </section>
+
+      <section class="panel" aria-labelledby="menu-panel-title">
+        <div id="menu-editor">
+          <div class="panel-head">
+            <h2 id="menu-panel-title" class="panel-title">메뉴 후보</h2>
+            <span id="menu-count">6개</span>
+          </div>
+          <div id="preset-list" class="presets" aria-label="메뉴 프리셋"></div>
+          <div id="menu-tags" aria-live="polite"></div>
+          <form id="quick-add-form" class="quick-add">
+            <input id="menu-input" type="text" maxlength="180" placeholder="김치찌개, 초밥, 파스타 한 번에 입력" autocomplete="off" aria-label="추가할 메뉴">
+            <button id="add-button" type="submit">추가</button>
+          </form>
+          <p class="helper">쉼표·줄바꿈·슬래시로 여러 메뉴를 한꺼번에 추가할 수 있어요. 최대 10개.</p>
+        </div>
+        <div id="spin-live" hidden>
+          <div class="spin-head"><span class="spin-title">🎮 룰렛 브레이크</span><span id="brake-label">0 / 5단계</span></div>
+          <div id="brake-gauge" aria-label="감속 단계"></div>
+          <aside id="ad-slot" data-visible="false" aria-label="광고" aria-hidden="true"></aside>
+          <p class="spin-help">룰렛을 클릭하거나 터치할 때마다 한 단계씩 느려져요</p>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button id="spin-button" type="button">이대로 돌리기</button>
+        <button id="share-button" type="button" aria-label="현재 메뉴판 공유">공유</button>
+      </div>
+
+      <details class="history">
+        <summary>최근 결과 보기</summary>
+        <ol id="history-list"><li>아직 결과가 없어요</li></ol>
+      </details>
+    </div>
+  </main>
+
+  <section id="result-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="result-menu" hidden>
+    <div class="result-card">
+      <span class="result-badge">TODAY'S MENU</span>
+      <h2 id="result-menu">김치찌개</h2>
+      <p>오늘은 이걸로 오밥완!</p>
+      <div class="prescription">
+        <strong>✨ AI 한 줄 처방전</strong>
+        <p id="ai-prescription">맛있게 먹으면 오늘의 고민은 끝입니다.</p>
+      </div>
+      <a id="coupang-link" target="_blank" rel="noopener noreferrer sponsored" hidden>쿠팡에서 재료 찾기</a>
+      <button id="close-result" type="button">닫고 한 번 더 돌리기</button>
+    </div>
+  </section>
+  <div id="toast" role="status" hidden></div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const CONFIG = Object.freeze({
+      adfitScriptUrl: '',
+      tenpingScriptUrl: '',
+      coupangDeepLinkTemplate: '', // 발급된 파트너스 URL에서 검색어 위치를 {query}로 지정
+      geminiEndpoint: '' // API 키를 보관하는 서버리스 프록시 URL
+    });
+    const PRESETS = Object.freeze({
+      '추천': ['김치찌개','돈가스','초밥','파스타','제육볶음','마라탕'],
+      '한식': ['삼겹살','김치찌개','제육볶음','닭갈비','국밥','칼국수'],
+      '배달': ['치킨','피자','족발','떡볶이','햄버거','마라탕'],
+      '회식': ['삼겹살','소고기','회','곱창','닭갈비','조개구이'],
+      '가볍게': ['샐러드','포케','김밥','샌드위치','쌀국수','메밀소바']
+    });
+    const DEFAULT_STATE = Object.freeze({ title:'오늘 뭐 먹지?', items:Object.freeze([...PRESETS['추천']]) });
+    const COLORS = Object.freeze(['#f97316','#fbbf24','#4ade80','#38bdf8','#a78bfa','#fb7185','#2dd4bf','#f472b6','#84cc16','#60a5fa','#c084fc','#fb923c']);
+    const TAU = Math.PI * 2;
+    const STOP_SPEED = 0.001;
+    const MAX_DELTA = 0.05;
+    const MAX_ITEMS = 10;
+    const BRAKE_STAGES = 5;
+
+    const $ = (selector) => document.querySelector(selector);
+    const canvas = $('#wheel');
+    const context = canvas.getContext('2d',{alpha:true});
+    const wheelShell = $('#wheel-shell');
+    const titleNode = $('#group-title');
+    const statusNode = $('#status');
+    const tagsNode = $('#menu-tags');
+    const countNode = $('#menu-count');
+    const inputNode = $('#menu-input');
+    const spinButton = $('#spin-button');
+    const resultModal = $('#result-modal');
+    const resultMenuNode = $('#result-menu');
+    const prescriptionNode = $('#ai-prescription');
+    const coupangLink = $('#coupang-link');
+    const historyNode = $('#history-list');
+    const adSlot = $('#ad-slot');
+    const menuEditor = $('#menu-editor');
+    const spinLive = $('#spin-live');
+    const brakeGauge = $('#brake-gauge');
+    const brakeLabel = $('#brake-label');
+    const toastNode = $('#toast');
+
+    let state = readUrlState();
+    let rotation = 0;
+    let velocity = 0;
+    let deceleration = 0;
+    let baseDeceleration = 0;
+    let brakeStage = 0;
+    let spinStartedAt = 0;
+    let previousTime = 0;
+    let animationFrameId = 0;
+    let resizeFrameId = 0;
+    let isSpinning = false;
+    let bakedCanvas = null;
+    let audioContext = null;
+    let toastTimerId = 0;
+    let historyEntries = [];
+
+    for(let index=0;index<BRAKE_STAGES;index+=1) brakeGauge.appendChild(document.createElement('span'));
+
+    function safeText(value,maxLength=24) {
+      return String(value ?? '').normalize('NFC').replace(/[\u0000-\u001f\u007f<>"'`]/g,'').replace(/\s+/g,' ').trim().slice(0,maxLength);
+    }
+
+    function parseItems(raw) {
+      const unique = new Set();
+      return String(raw ?? '').split(/[,\n/|]+/).map((item)=>safeText(item)).filter((item)=>{
+        const key=item.toLocaleLowerCase('ko-KR');
+        if(!item||unique.has(key)) return false;
+        unique.add(key); return true;
+      }).slice(0,MAX_ITEMS);
+    }
+
+    function validState(candidate) {
+      const items=parseItems(Array.isArray(candidate.items)?candidate.items.join(','):candidate.items);
+      return { title:safeText(candidate.title,40)||DEFAULT_STATE.title, items:items.length>=2?items:[...DEFAULT_STATE.items] };
+    }
+
+    function readUrlState() {
+      const params=new URLSearchParams(location.search);
+      return validState({title:params.get('title'),items:params.get('items')});
+    }
+
+    function stateUrl(nextState) {
+      const params=new URLSearchParams();
+      params.set('title',nextState.title);
+      params.set('items',nextState.items.join(','));
+      return `./?${params.toString()}`;
+    }
+
+    function commitState(nextState,{push=true,notice=''}={}) {
+      state=validState(nextState);
+      const historyState={title:state.title,items:[...state.items]};
+      if(push) history.pushState(historyState,'',stateUrl(state));
+      else history.replaceState(historyState,'',stateUrl(state));
+      renderState();
+      if(notice) showToast(notice);
+    }
+
+    function renderState() {
+      titleNode.textContent=state.title;
+      countNode.textContent=`${state.items.length}개`;
+      canvas.setAttribute('aria-label',`${state.title}: ${state.items.join(', ')}`);
+      renderTags();
+      updatePresetSelection();
+      spinButton.disabled=state.items.length<2||isSpinning;
+      spinButton.textContent=state.items.length<2?'메뉴를 2개 이상 추가해 주세요':isSpinning?'고르는 중…':'이대로 돌리기';
+      rebakeWheel();
+    }
+
+    function renderTags() {
+      tagsNode.replaceChildren();
+      state.items.forEach((item,index)=>{
+        const tag=document.createElement('span');
+        tag.className='menu-tag';
+        const label=document.createElement('span');
+        label.textContent=item;
+        const remove=document.createElement('button');
+        remove.type='button'; remove.className='tag-remove'; remove.textContent='×'; remove.setAttribute('aria-label',`${item} 삭제`);
+        remove.addEventListener('click',()=>removeItem(index));
+        tag.append(label,remove); tagsNode.appendChild(tag);
+      });
+    }
+
+    function renderPresets() {
+      const list=$('#preset-list');
+      Object.entries(PRESETS).forEach(([name,items])=>{
+        const button=document.createElement('button');
+        button.type='button'; button.className='preset'; button.textContent=name; button.dataset.preset=name;
+        button.addEventListener('click',()=>commitState({title:state.title,items},{notice:`${name} 메뉴로 바꿨어요`}));
+        list.appendChild(button);
+      });
+    }
+
+    function updatePresetSelection() {
+      document.querySelectorAll('.preset').forEach((button)=>{
+        const preset=PRESETS[button.dataset.preset];
+        button.setAttribute('aria-pressed',String(preset.length===state.items.length&&preset.every((item,index)=>item===state.items[index])));
+      });
+    }
+
+    function addItems(raw) {
+      const additions=parseItems(raw);
+      if(!additions.length) { showToast('추가할 메뉴를 입력해 주세요'); return; }
+      const existing=new Set(state.items.map((item)=>item.toLocaleLowerCase('ko-KR')));
+      const merged=[...state.items];
+      additions.forEach((item)=>{ if(merged.length<MAX_ITEMS&&!existing.has(item.toLocaleLowerCase('ko-KR'))){ merged.push(item); existing.add(item.toLocaleLowerCase('ko-KR')); } });
+      if(merged.length===state.items.length) { showToast(state.items.length>=MAX_ITEMS?'메뉴는 최대 10개예요':'이미 들어 있는 메뉴예요'); return; }
+      inputNode.value='';
+      commitState({title:state.title,items:merged},{notice:`${merged.length-state.items.length}개 메뉴를 추가했어요`});
+    }
+
+    function removeItem(index) {
+      if(state.items.length<=2) { showToast('룰렛에는 메뉴가 최소 2개 필요해요'); return; }
+      const items=state.items.filter((_,itemIndex)=>itemIndex!==index);
+      commitState({title:state.title,items});
+    }
+
+    function createBakeSurface(width,height) {
+      if('OffscreenCanvas' in window) return new OffscreenCanvas(width,height);
+      const fallback=document.createElement('canvas'); fallback.width=width; fallback.height=height; return fallback;
+    }
+
+    function rebakeWheel() {
+      const bounds=canvas.getBoundingClientRect();
+      if(!bounds.width||!bounds.height) return;
+      const dpr=Math.min(devicePixelRatio||1,3);
+      const size=Math.max(1,Math.round(Math.min(bounds.width,bounds.height)*dpr));
+      canvas.width=size; canvas.height=size;
+      bakedCanvas=createBakeSurface(size,size);
+      const bake=bakedCanvas.getContext('2d');
+      const center=size/2; const radius=center*.96; const segment=TAU/state.items.length;
+      bake.clearRect(0,0,size,size);
+      state.items.forEach((item,index)=>{
+        const centerAngle=index*segment;
+        bake.beginPath(); bake.moveTo(center,center); bake.arc(center,center,radius,centerAngle-segment/2,centerAngle+segment/2); bake.closePath();
+        bake.fillStyle=COLORS[index%COLORS.length]; bake.fill();
+        bake.strokeStyle='rgba(255,255,255,.9)'; bake.lineWidth=Math.max(2,size*.007); bake.stroke();
+        bake.save(); bake.translate(center,center); bake.rotate(centerAngle); bake.textAlign='right'; bake.textBaseline='middle'; bake.fillStyle='#1c1917';
+        bake.font=`900 ${Math.max(11,Math.round(size/Math.max(20,state.items.length*2.2)))}px system-ui,sans-serif`;
+        bake.fillText(item,radius*.83,0,radius*.62); bake.restore();
+      });
+      bake.beginPath(); bake.arc(center,center,radius*.12,0,TAU); bake.fillStyle='#292524'; bake.fill(); renderWheel();
+    }
+
+    function renderWheel() {
+      if(!bakedCanvas) return;
+      const center=canvas.width/2;
+      context.clearRect(0,0,canvas.width,canvas.height); context.save(); context.translate(center,center); context.rotate(rotation);
+      context.drawImage(bakedCanvas,-center,-center,canvas.width,canvas.height); context.restore();
+    }
+
+    const normalizeAngle=(angle)=>((angle%TAU)+TAU)%TAU;
+    function selectedIndex() {
+      const segment=TAU/state.items.length;
+      const pointerLocal=normalizeAngle(-Math.PI/2-rotation);
+      return Math.floor(normalizeAngle(pointerLocal+segment/2)/segment)%state.items.length;
+    }
+
+    function animationFrame(now) {
+      if(!isSpinning) return;
+      const delta=Math.min(Math.max((now-previousTime)/1000,0),MAX_DELTA); previousTime=now;
+      velocity=Math.max(0,velocity-deceleration*delta); rotation=normalizeAngle(rotation+velocity*delta); renderWheel();
+      if(velocity<=STOP_SPEED||now-spinStartedAt>=9500) { finishRoulette(); return; }
+      animationFrameId=requestAnimationFrame(animationFrame);
+    }
+
+    function finishRoulette() {
+      cancelAnimationFrame(animationFrameId); animationFrameId=0; velocity=0; isSpinning=false; wheelShell.classList.remove('is-spinning','brake-hit');
+      const winner=state.items[selectedIndex()];
+      statusNode.textContent=`${winner} 당첨!`; cleanupAds(); playFinishTone(); onRouletteComplete(winner); renderState();
+    }
+
+    function startRouletteSequence() {
+      if(isSpinning||state.items.length<2) return;
+      cleanupRuntime(false); closeResult(); isSpinning=true; brakeStage=0; velocity=18+Math.random()*4; baseDeceleration=2.45+Math.random()*.15; deceleration=baseDeceleration;
+      previousTime=performance.now(); spinStartedAt=previousTime; updateBrakeUI(); wheelShell.classList.add('is-spinning');
+      statusNode.textContent='빠르게 회전 중! 룰렛을 눌러 브레이크'; spinButton.disabled=true; spinButton.textContent='룰렛을 눌러 감속하세요'; showAds();
+      animationFrameId=requestAnimationFrame(animationFrame);
+    }
+
+    function applyBrake(event) {
+      if(!isSpinning||brakeStage>=BRAKE_STAGES) return;
+      if(event) event.preventDefault();
+      brakeStage+=1;
+      const stageCap=22*(1-brakeStage*.15);
+      velocity=Math.min(velocity*(.88-brakeStage*.02),stageCap);
+      deceleration=baseDeceleration+brakeStage*.84;
+      if(brakeStage===BRAKE_STAGES) { velocity=Math.min(velocity,1.6); deceleration=Math.max(deceleration,6.5); }
+      updateBrakeUI();
+      statusNode.textContent=brakeStage===BRAKE_STAGES?'최종 브레이크! 곧 멈춰요':`브레이크 ${brakeStage}단계 · 한 번 더 눌러 감속`;
+      wheelShell.classList.remove('brake-hit'); void wheelShell.offsetWidth; wheelShell.classList.add('brake-hit');
+      setTimeout(()=>wheelShell.classList.remove('brake-hit'),90);
+      playBrakeTone(brakeStage);
+      if(navigator.vibrate) navigator.vibrate(8+brakeStage*2);
+    }
+
+    function updateBrakeUI() {
+      brakeLabel.textContent=`${brakeStage} / ${BRAKE_STAGES}단계`;
+      [...brakeGauge.children].forEach((bar,index)=>bar.classList.toggle('active',index<brakeStage));
+    }
+
+    function showAds() {
+      cleanupAds();
+      const urls=[CONFIG.adfitScriptUrl,CONFIG.tenpingScriptUrl].filter(isSafeHttpsUrl);
+      menuEditor.hidden=true; spinLive.hidden=false;
+      adSlot.dataset.visible='true'; adSlot.setAttribute('aria-hidden','false');
+      if(!urls.length) {
+        const placeholder=document.createElement('div'); placeholder.className='ad-placeholder'; placeholder.textContent='SPONSORED · 광고 슬롯'; adSlot.appendChild(placeholder); return;
+      }
+      const frame=document.createElement('iframe'); frame.title='광고'; frame.setAttribute('sandbox','allow-scripts allow-popups allow-popups-to-escape-sandbox'); frame.referrerPolicy='strict-origin-when-cross-origin';
+      const encoded=JSON.stringify(urls).replace(/</g,'\\u003c');
+      frame.srcdoc=`<!doctype html><html><body style="margin:0"><script>(async()=>{for(const url of ${encoded}){await new Promise(done=>{const script=document.createElement('script');script.async=true;script.src=url;script.onload=done;script.onerror=done;document.body.appendChild(script)})}})()<\/script></body></html>`;
+      adSlot.appendChild(frame);
+    }
+
+    function cleanupAds() {
+      adSlot.replaceChildren(); adSlot.dataset.visible='false'; adSlot.setAttribute('aria-hidden','true');
+      menuEditor.hidden=false; spinLive.hidden=true;
+      for(const key of ['adfit','Tenping']) { try { window[key]=null; delete window[key]; } catch { window[key]=null; } }
+    }
+
+    function isSafeHttpsUrl(value) { try { return new URL(value).protocol==='https:'; } catch { return false; } }
+    function menuKeyword(menuName) { return safeText(menuName).replace(/[^0-9A-Za-z가-힣]/g,'').slice(0,6); }
+    function createCoupangDeepLink(menuName) {
+      if(!CONFIG.coupangDeepLinkTemplate.includes('{query}')) return '';
+      const url=CONFIG.coupangDeepLinkTemplate.replace('{query}',encodeURIComponent(menuKeyword(menuName)));
+      return isSafeHttpsUrl(url)?url:'';
+    }
+
+    async function requestGeminiPrescription(menuName) {
+      if(!isSafeHttpsUrl(CONFIG.geminiEndpoint)) return {text:`${menuName}, 고민 끝. 오늘은 맛있게 먹는 게 정답입니다.`};
+      const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),10000);
+      try {
+        const response=await fetch(CONFIG.geminiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({menuName:safeText(menuName)}),signal:controller.signal});
+        if(!response.ok) throw new Error(`Gemini proxy failed: ${response.status}`);
+        return await response.json();
+      } finally { clearTimeout(timer); }
+    }
+
+    async function onRouletteComplete(menuName) {
+      resultMenuNode.textContent=menuName; prescriptionNode.textContent='메뉴에 어울리는 한 줄을 준비하고 있어요…';
+      const deepLink=createCoupangDeepLink(menuName);
+      if(deepLink) { coupangLink.href=deepLink; coupangLink.hidden=false; } else { coupangLink.removeAttribute('href'); coupangLink.hidden=true; }
+      historyEntries.unshift({menuName,time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}); historyEntries=historyEntries.slice(0,8); renderHistory();
+      resultModal.hidden=false; $('#close-result').focus();
+      try { const result=await requestGeminiPrescription(menuName); prescriptionNode.textContent=safeText(result.text||result.prescription,180)||'맛있게 먹으면 오늘의 고민은 끝입니다.'; }
+      catch { prescriptionNode.textContent='처방전을 불러오지 못했지만, 메뉴 선택은 완료됐어요.'; }
+      window.dispatchEvent(new CustomEvent('obabwan:complete',{detail:{menuName,keyword:menuKeyword(menuName)}}));
+    }
+
+    function renderHistory() {
+      historyNode.replaceChildren();
+      if(!historyEntries.length) { const li=document.createElement('li'); li.textContent='아직 결과가 없어요'; historyNode.appendChild(li); return; }
+      historyEntries.forEach(({menuName,time})=>{ const li=document.createElement('li'); li.textContent=`${menuName} · ${time}`; historyNode.appendChild(li); });
+    }
+
+    function playFinishTone() {
+      try {
+        audioContext??=new (window.AudioContext||window.webkitAudioContext)();
+        const oscillator=audioContext.createOscillator(); const gain=audioContext.createGain();
+        oscillator.frequency.setValueAtTime(660,audioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime(880,audioContext.currentTime+.12);
+        gain.gain.setValueAtTime(.07,audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.2);
+        oscillator.connect(gain).connect(audioContext.destination); oscillator.start(); oscillator.stop(audioContext.currentTime+.2);
+        oscillator.addEventListener('ended',()=>{oscillator.disconnect();gain.disconnect();},{once:true});
+      } catch {}
+    }
+
+    function playBrakeTone(stage) {
+      try {
+        audioContext??=new (window.AudioContext||window.webkitAudioContext)();
+        const oscillator=audioContext.createOscillator(); const gain=audioContext.createGain();
+        oscillator.type='square'; oscillator.frequency.setValueAtTime(520-stage*28,audioContext.currentTime);
+        gain.gain.setValueAtTime(.025,audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.045);
+        oscillator.connect(gain).connect(audioContext.destination); oscillator.start(); oscillator.stop(audioContext.currentTime+.05);
+        oscillator.addEventListener('ended',()=>{oscillator.disconnect();gain.disconnect();},{once:true});
+      } catch {}
+    }
+
+    async function shareCurrentState() {
+      const url=new URL(stateUrl(state),location.href).href;
+      const shareData={title:`${state.title} · 오밥완`,text:`${state.items.join(', ')} 중 오늘 메뉴를 골라보세요.`,url};
+      try {
+        if(navigator.share) { await navigator.share(shareData); return; }
+        await navigator.clipboard.writeText(url); showToast('메뉴판 링크를 복사했어요');
+      } catch(error) { if(error.name!=='AbortError') showToast('공유하지 못했어요. 다시 시도해 주세요'); }
+    }
+
+    function closeResult() { resultModal.hidden=true; }
+    function showToast(message) {
+      clearTimeout(toastTimerId); toastNode.textContent=message; toastNode.hidden=false;
+      toastTimerId=setTimeout(()=>{toastNode.hidden=true;},2200);
+    }
+
+    function cleanupRuntime(resetStatus=true) {
+      if(animationFrameId) cancelAnimationFrame(animationFrameId);
+      animationFrameId=0; isSpinning=false; velocity=0; previousTime=0; spinStartedAt=0; brakeStage=0; wheelShell.classList.remove('is-spinning','brake-hit'); updateBrakeUI(); cleanupAds(); spinButton.disabled=state.items.length<2;
+      if(resetStatus) statusNode.textContent='준비 완료';
+    }
+
+    function restoreNavigation() { cleanupRuntime(); closeResult(); state=readUrlState(); renderState(); }
+
+    renderPresets(); renderState(); history.replaceState({title:state.title,items:[...state.items]},'',stateUrl(state));
+    $('#quick-add-form').addEventListener('submit',(event)=>{event.preventDefault();addItems(inputNode.value);});
+    $('#reset-button').addEventListener('click',()=>commitState({title:DEFAULT_STATE.title,items:[...DEFAULT_STATE.items]},{notice:'기본 메뉴로 초기화했어요'}));
+    spinButton.addEventListener('click',startRouletteSequence);
+    wheelShell.addEventListener('pointerdown',applyBrake);
+    wheelShell.addEventListener('keydown',(event)=>{if(isSpinning&&(event.key==='Enter'||event.key===' '))applyBrake(event);});
+    $('#share-button').addEventListener('click',shareCurrentState);
+    $('#close-result').addEventListener('click',closeResult);
+    resultModal.addEventListener('click',(event)=>{if(event.target===resultModal)closeResult();});
+    titleNode.addEventListener('keydown',(event)=>{if(event.key==='Enter'){event.preventDefault();titleNode.blur();}});
+    titleNode.addEventListener('blur',()=>{const title=safeText(titleNode.textContent,40)||DEFAULT_STATE.title;if(title!==state.title)commitState({title,items:state.items});else titleNode.textContent=state.title;});
+    titleNode.addEventListener('paste',(event)=>{event.preventDefault();document.execCommand('insertText',false,safeText(event.clipboardData.getData('text/plain'),40));});
+    window.addEventListener('popstate',restoreNavigation);
+    window.addEventListener('pageshow',(event)=>{if(event.persisted||isSpinning||spinButton.disabled)restoreNavigation();});
+    window.addEventListener('resize',()=>{cancelAnimationFrame(resizeFrameId);resizeFrameId=requestAnimationFrame(()=>{resizeFrameId=0;rebakeWheel();});},{passive:true});
+    window.addEventListener('orientationchange',()=>{cancelAnimationFrame(resizeFrameId);resizeFrameId=requestAnimationFrame(()=>{resizeFrameId=0;rebakeWheel();});},{passive:true});
+    window.addEventListener('pagehide',()=>{cleanupRuntime(false);if(audioContext){audioContext.close().catch(()=>{});audioContext=null;}bakedCanvas=null;});
+    window.startRouletteSequence=startRouletteSequence;
+    window.onRouletteComplete=onRouletteComplete;
+  })();
+  </script>
+</body>
+</html>
