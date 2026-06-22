@@ -175,5 +175,5 @@
 - 승인된 카카오 애드핏 320x100 고정 광고를 룰렛 바로 위로 이동했다.
 - 텐핑과 쿠팡 광고가 포함된 PARTNER RECOMMENDATION 영역을 `이대로 돌리기` 버튼 바로 위로 이동했다.
 - 광고 iframe 생성·격리·정리 로직과 애드핏 원본 크기 및 무변형 정책은 그대로 유지했다.
-- 검증: 인라인 JavaScript 문법 검사 통과, 로컬 HTTP 200, DOM에서 애드핏→룰렛 및 PARTNER RECOMMENDATION→버튼 인접 순서, 애드핏 320x100, 회전 중 전체 광고 유지, 로컬 콘솔 오류 0건을 확인했다. 공개 배포 검사는 커밋 후 진행한다.
-- 커밋: `style: reposition monetization sections`
+- 검증: 인라인 JavaScript 문법 검사 통과, 로컬 HTTP 200, 로컬·공개 DOM에서 애드핏→룰렛 및 PARTNER RECOMMENDATION→버튼 인접 순서, 애드핏 320x100, 회전 중 전체 광고 유지, 공개 콘솔 오류 0건, GitHub Pages `built`를 확인했다.
+- 커밋: `57e98cd style: reposition monetization sections`
