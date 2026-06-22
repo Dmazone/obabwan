@@ -6,7 +6,7 @@
 - GitHub 저장소: <https://github.com/Dmazone/obabwan>
 - 배포 브랜치: `main` 루트, GitHub Pages legacy 방식
 - 앱 구조: 단일 `index.html` 제로 빌드 웹앱
-- 현재 기능 기준 커밋: `bfe47a2` (문서 전용 커밋은 이후일 수 있음)
+- 현재 기능 기준 커밋: `git log -1 --oneline`으로 확인
 
 ## 구현된 기능
 
@@ -33,12 +33,11 @@
 
 ## 외부 연동 상태
 
-`index.html`의 `CONFIG` 연결 지점만 구현되어 있고 실제 발급값은 아직 비어 있다.
-
-- `adfitScriptUrl`: 카카오 애드핏 심사 완료 URL 필요
-- `tenpingScriptUrl`: 텐핑 공식 광고 URL 필요
-- `coupangDeepLinkTemplate`: `{query}`를 포함한 쿠팡 파트너스 발급 URL 필요
-- `geminiEndpoint`: API 키를 숨기는 서버리스 프록시 필요
+- 카카오 애드핏: 매체 `오밥완 메뉴추천 게임`, 320×100 단위 `DAN-jzmk9rPd9goT1dXv`. 룰렛 회전 중 메뉴 편집 영역에서만 샌드박스 iframe으로 로드한다.
+- 쿠팡 파트너스: 배너 ID `996318`, 트래킹 코드 `AF8691300`, 160×110 캐러셀을 제휴 영역에 샌드박스 iframe으로 표시한다.
+- 텐핑: 머니트리카드 캠페인 `HCOSXMUILM`을 제휴 카드로 표시한다.
+- `coupangDeepLinkTemplate`: 결과별 딥링크는 `{query}`를 포함한 정식 발급 URL이 생길 때 연결한다.
+- `geminiEndpoint`: API 키를 숨기는 서버리스 프록시가 필요하다.
 - 정적 HTML에 API 키나 인증 토큰을 넣지 않는다.
 
 ## 변경·검증·배포
@@ -57,3 +56,5 @@
 - Gemini 키를 클라이언트에 노출하지 않고 프록시 방식만 허용한다.
 - 사용자 입력은 `textContent`와 스크리닝을 사용하며 사용자 문자열을 `innerHTML`에 넣지 않는다.
 - 프리셋은 가로 슬라이드 대신 한눈에 보이는 4열 2행을 사용한다.
+- 제휴 광고는 룰렛 조작을 가리지 않으며, 광고 스크립트는 앱 전역과 분리된 iframe에서만 실행한다.
+- 푸터에는 DmaZone 사업자 정보, 개인정보처리방침, 문의 메일을 유지한다.

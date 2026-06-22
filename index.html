@@ -59,6 +59,27 @@
     .history summary { color:#78716c; font-size:12px; font-weight:800; cursor:pointer; }
     #history-list { display:flex; gap:7px; margin:8px 0 0; padding:0; overflow-x:auto; list-style:none; }
     #history-list li { flex:none; border-radius:999px; background:#292524; padding:6px 10px; color:#fff; font-size:11px; }
+    .partner-panel { margin-top:15px; border:1px solid #ffedd5; border-radius:20px; background:rgb(255 255 255 / .72); padding:12px; }
+    .partner-label { margin:0 0 8px; color:#a8a29e; font-size:9px; font-weight:850; letter-spacing:.12em; text-align:center; }
+    .partner-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .partner-card { min-height:110px; overflow:hidden; border:1px solid #e7e5e4; border-radius:14px; background:#fff; }
+    .tenping-card { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:12px 8px; background:linear-gradient(145deg,#1a56db,#0ea5e9); color:#fff; text-align:center; text-decoration:none; }
+    .tenping-card strong { font-size:13px; line-height:1.35; }
+    .tenping-card span { color:rgb(255 255 255 / .76); font-size:9px; line-height:1.4; }
+    .coupang-card { display:flex; align-items:center; justify-content:center; }
+    .partner-disclosure { margin:8px 2px 0; color:#a8a29e; font-size:8px; line-height:1.5; text-align:center; }
+    .site-footer { padding:25px 4px 5px; text-align:center; }
+    .brand-mark { display:inline-flex; align-items:center; gap:6px; color:#78716c; font-size:12px; font-weight:900; opacity:.72; }
+    .site-footer p { margin:4px 0 0; color:#a8a29e; font-size:10px; }
+    .footer-links { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:8px; }
+    .footer-links button,.footer-links a { border:0; background:transparent; padding:0; color:#a8a29e; font-size:10px; text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
+    .privacy-card { width:min(100%,420px); max-height:86dvh; overflow-y:auto; border-radius:24px; background:#fff; padding:22px; box-shadow:0 24px 80px rgb(0 0 0 / .3); }
+    .privacy-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .privacy-head h2 { margin:0; font-size:18px; font-weight:900; }
+    #close-privacy { border:0; border-radius:50%; background:#f5f5f4; width:32px; height:32px; cursor:pointer; }
+    .privacy-body { margin-top:16px; color:#57534e; font-size:12px; line-height:1.65; }
+    .privacy-body h3 { margin:14px 0 4px; color:#292524; font-size:13px; }
+    .privacy-body p { margin:0; }
     .modal { position:fixed; inset:0; z-index:70; display:grid; place-items:center; padding:22px; background:rgb(28 25 23 / .68); opacity:1; transition:opacity .18s ease; }
     .modal[hidden] { display:none; }
     .result-card { width:min(100%,380px); max-height:90dvh; overflow-y:auto; border-radius:28px; background:#fff; padding:26px 22px 20px; text-align:center; box-shadow:0 24px 80px rgb(0 0 0 / .28); }
@@ -79,10 +100,11 @@
     #brake-gauge span { height:8px; border-radius:999px; background:#e7e5e4; transition:background .12s ease,transform .12s ease; }
     #brake-gauge span.active { background:linear-gradient(90deg,#fb923c,#ef4444); transform:scaleY(1.35); }
     .spin-help { margin:8px 0 0; text-align:center; color:#78716c; font-size:11px; font-weight:750; }
-    #ad-slot { position:relative; height:74px; overflow:hidden; border:1px solid #e7e5e4; border-radius:13px; visibility:hidden; opacity:0; background:#f5f5f4; transition:opacity .15s ease; }
+    #ad-slot { position:relative; height:102px; overflow:hidden; border:1px solid #e7e5e4; border-radius:13px; visibility:hidden; opacity:0; background:#f5f5f4; transition:opacity .15s ease; }
     #ad-slot[data-visible="true"] { visibility:visible; opacity:1; }
     #ad-slot iframe { display:block; width:100%; height:100%; border:0; }
     .ad-placeholder { display:grid; width:100%; height:100%; place-items:center; color:#a8a29e; font-size:10px; font-weight:800; letter-spacing:.08em; }
+    @media (max-width:390px) { .partner-grid { grid-template-columns:1fr; } }
     @media (max-height:760px) { .app { padding-top:12px; } .wheel-shell { width:min(58vw,240px); } .panel { margin-top:7px; padding:12px; } .wheel-area { margin:8px 0 5px; } }
     @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; } }
   </style>
@@ -139,6 +161,34 @@
         <summary>최근 결과 보기</summary>
         <ol id="history-list"><li>아직 결과가 없어요</li></ol>
       </details>
+
+      <section class="partner-panel" aria-label="추천 제휴 광고">
+        <p class="partner-label">PARTNER RECOMMENDATION</p>
+        <div class="partner-grid">
+          <a class="partner-card tenping-card" href="https://www.moneytreecard.co.kr/?type=B&id=HCOSXMUILM" target="_blank" rel="noopener noreferrer sponsored">
+            <strong>💳 머니트리카드<br>무료 신청하기</strong>
+            <span>연회비·실적 조건 없음<br>첫 결제 혜택 확인하기 →</span>
+          </a>
+          <div id="coupang-ad-slot" class="partner-card coupang-card" aria-label="쿠팡 파트너스 광고"></div>
+        </div>
+        <p class="partner-disclosure">이 포스팅은 텐핑 및 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다.</p>
+      </section>
+
+      <footer class="site-footer">
+        <div class="brand-mark" aria-label="DmaZone">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="20" height="20" aria-hidden="true">
+            <rect width="36" height="36" rx="8" fill="#292524"/><rect x="3" y="8" width="3.5" height="20" fill="#f97316"/><polygon points="6.5,8 10,8 14,28 10.5,28" fill="#f97316"/><rect x="13.5" y="8" width="3.5" height="20" fill="#f97316"/><path fill-rule="evenodd" fill="white" d="M19 8 L22 8 Q34 8 34 18 Q34 28 22 28 L19 28 Z M22 12 Q30 12 30 18 Q30 24 22 24 Z"/>
+          </svg>
+          <span>오밥완 · DmaZone</span>
+        </div>
+        <p>(주)드마존 · 사업자등록번호 152-10-03103</p>
+        <p>© 2026 OBABWAN. 오늘 메뉴 선택 완료.</p>
+        <div class="footer-links">
+          <button id="open-privacy" type="button">개인정보처리방침</button>
+          <span aria-hidden="true">|</span>
+          <a href="mailto:paydma@gmail.com">문의하기</a>
+        </div>
+      </footer>
     </div>
   </main>
 
@@ -155,6 +205,22 @@
       <button id="close-result" type="button">닫고 한 번 더 돌리기</button>
     </div>
   </section>
+  <section id="privacy-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="privacy-title" hidden>
+    <div class="privacy-card">
+      <div class="privacy-head"><h2 id="privacy-title">개인정보처리방침</h2><button id="close-privacy" type="button" aria-label="개인정보처리방침 닫기">×</button></div>
+      <div class="privacy-body">
+        <p>오밥완은 메뉴 룰렛 제공에 필요한 최소한의 정보만 브라우저에서 처리합니다.</p>
+        <h3>1. 직접 수집하는 정보</h3>
+        <p>오밥완은 회원가입이나 자체 서버를 운영하지 않으며, 입력한 제목과 메뉴는 URL 및 현재 브라우저에서만 처리됩니다.</p>
+        <h3>2. 외부 서비스</h3>
+        <p>광고와 제휴 기능을 위해 카카오 애드핏, 쿠팡 파트너스, 텐핑을 사용합니다. 각 사업자는 광고 제공·성과 측정을 위해 쿠키, 접속 기록, 기기 정보를 처리할 수 있습니다.</p>
+        <h3>3. 공유 기능</h3>
+        <p>공유 버튼은 브라우저의 Web Share 또는 클립보드 기능을 사용하며, 사용자가 실행하기 전에는 외부로 전송하지 않습니다.</p>
+        <h3>4. 문의</h3>
+        <p>개인정보 관련 문의: paydma@gmail.com<br>시행일: 2026년 6월 22일</p>
+      </div>
+    </div>
+  </section>
   <div id="toast" role="status" hidden></div>
 
   <script>
@@ -162,8 +228,7 @@
     'use strict';
 
     const CONFIG = Object.freeze({
-      adfitScriptUrl: '',
-      tenpingScriptUrl: '',
+      adfitUnitId: 'DAN-jzmk9rPd9goT1dXv',
       coupangDeepLinkTemplate: '', // 발급된 파트너스 URL에서 검색어 위치를 {query}로 지정
       geminiEndpoint: '' // API 키를 보관하는 서버리스 프록시 URL
     });
@@ -208,6 +273,8 @@
     const brakeGauge = $('#brake-gauge');
     const brakeLabel = $('#brake-label');
     const toastNode = $('#toast');
+    const privacyModal = $('#privacy-modal');
+    const coupangAdSlot = $('#coupang-ad-slot');
 
     let state = readUrlState();
     let activePreset = sameItems(state.items,DEFAULT_ITEMS)?'추천':'';
@@ -442,15 +509,18 @@
 
     function showAds() {
       cleanupAds();
-      const urls=[CONFIG.adfitScriptUrl,CONFIG.tenpingScriptUrl].filter(isSafeHttpsUrl);
       menuEditor.hidden=true; spinLive.hidden=false;
       adSlot.dataset.visible='true'; adSlot.setAttribute('aria-hidden','false');
-      if(!urls.length) {
+      if(!/^DAN-[A-Za-z0-9]+$/.test(CONFIG.adfitUnitId)) {
         const placeholder=document.createElement('div'); placeholder.className='ad-placeholder'; placeholder.textContent='SPONSORED · 광고 슬롯'; adSlot.appendChild(placeholder); return;
       }
-      const frame=document.createElement('iframe'); frame.title='광고'; frame.setAttribute('sandbox','allow-scripts allow-popups allow-popups-to-escape-sandbox'); frame.referrerPolicy='strict-origin-when-cross-origin';
-      const encoded=JSON.stringify(urls).replace(/</g,'\\u003c');
-      frame.srcdoc=`<!doctype html><html><body style="margin:0"><script>(async()=>{for(const url of ${encoded}){await new Promise(done=>{const script=document.createElement('script');script.async=true;script.src=url;script.onload=done;script.onerror=done;document.body.appendChild(script)})}})()<\/script></body></html>`;
+      const frame=document.createElement('iframe');
+      frame.title='카카오 애드핏 광고'; frame.width='320'; frame.height='100';
+      frame.style.cssText='display:block;width:320px;max-width:100%;height:100px;border:0;margin:auto;overflow:hidden';
+      frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox');
+      frame.referrerPolicy='strict-origin-when-cross-origin';
+      const unit=CONFIG.adfitUnitId;
+      frame.srcdoc=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;display:grid;place-items:center;width:100%;height:100px;overflow:hidden"><ins class="kakao_ad_area" style="display:none" data-ad-unit="${unit}" data-ad-width="320" data-ad-height="100"></ins><script src="https://t1.kakaocdn.net/kas/static/ba.min.js" async><\/script></body></html>`;
       adSlot.appendChild(frame);
     }
 
@@ -461,6 +531,16 @@
     }
 
     function isSafeHttpsUrl(value) { try { return new URL(value).protocol==='https:'; } catch { return false; } }
+    function renderCoupangBanner() {
+      if(!coupangAdSlot||coupangAdSlot.childElementCount) return;
+      const frame=document.createElement('iframe');
+      frame.title='쿠팡 파트너스 광고'; frame.width='160'; frame.height='110';
+      frame.style.cssText='display:block;width:160px;height:110px;border:0;margin:auto;overflow:hidden';
+      frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox');
+      frame.referrerPolicy='strict-origin-when-cross-origin';
+      frame.srcdoc='<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;width:160px;height:110px;overflow:hidden"><script src="https://ads-partners.coupang.com/g.js"><\/script><script>try{new PartnersCoupang.G({"id":996318,"template":"carousel","trackingCode":"AF8691300","width":"160","height":"110","tsource":""})}catch(e){document.body.textContent="쿠팡 파트너스 광고 준비 중"}<\/script></body></html>';
+      coupangAdSlot.appendChild(frame);
+    }
     function menuKeyword(menuName) { return safeText(menuName).replace(/[^0-9A-Za-z가-힣]/g,'').slice(0,6); }
     function createCoupangDeepLink(menuName) {
       if(!CONFIG.coupangDeepLinkTemplate.includes('{query}')) return '';
@@ -527,6 +607,8 @@
     }
 
     function closeResult() { resultModal.hidden=true; }
+    function openPrivacy() { privacyModal.hidden=false; $('#close-privacy').focus(); }
+    function closePrivacy() { privacyModal.hidden=true; }
     function showToast(message) {
       clearTimeout(toastTimerId); toastNode.textContent=message; toastNode.hidden=false;
       toastTimerId=setTimeout(()=>{toastNode.hidden=true;},2200);
@@ -540,7 +622,7 @@
 
     function restoreNavigation() { cleanupRuntime(); closeResult(); state=readUrlState(); activePreset=sameItems(state.items,DEFAULT_ITEMS)?'추천':''; renderState(); }
 
-    renderPresets(); renderState(); history.replaceState({title:state.title,items:[...state.items]},'',stateUrl(state));
+    renderPresets(); renderState(); renderCoupangBanner(); history.replaceState({title:state.title,items:[...state.items]},'',stateUrl(state));
     $('#quick-add-form').addEventListener('submit',(event)=>{event.preventDefault();addItems(inputNode.value);});
     $('#reset-button').addEventListener('click',()=>commitState({title:DEFAULT_STATE.title,items:[...DEFAULT_STATE.items]},{preset:'추천',notice:'기본 메뉴로 초기화했어요'}));
     spinButton.addEventListener('click',startRouletteSequence);
@@ -549,6 +631,10 @@
     $('#share-button').addEventListener('click',shareCurrentState);
     $('#close-result').addEventListener('click',closeResult);
     resultModal.addEventListener('click',(event)=>{if(event.target===resultModal)closeResult();});
+    $('#open-privacy').addEventListener('click',openPrivacy);
+    $('#close-privacy').addEventListener('click',closePrivacy);
+    privacyModal.addEventListener('click',(event)=>{if(event.target===privacyModal)closePrivacy();});
+    document.addEventListener('keydown',(event)=>{if(event.key==='Escape'){closeResult();closePrivacy();}});
     titleNode.addEventListener('keydown',(event)=>{if(event.key==='Enter'){event.preventDefault();titleNode.blur();}});
     titleNode.addEventListener('blur',()=>{const title=safeText(titleNode.textContent,40)||DEFAULT_STATE.title;if(title!==state.title)commitState({title,items:state.items});else titleNode.textContent=state.title;});
     titleNode.addEventListener('paste',(event)=>{event.preventDefault();document.execCommand('insertText',false,safeText(event.clipboardData.getData('text/plain'),40));});
