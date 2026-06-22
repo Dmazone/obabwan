@@ -100,11 +100,11 @@
     #brake-gauge span { height:8px; border-radius:999px; background:#e7e5e4; transition:background .12s ease,transform .12s ease; }
     #brake-gauge span.active { background:linear-gradient(90deg,#fb923c,#ef4444); transform:scaleY(1.35); }
     .spin-help { margin:8px 0 0; text-align:center; color:#78716c; font-size:11px; font-weight:750; }
-    #ad-slot { position:relative; height:102px; overflow:hidden; border:1px solid #e7e5e4; border-radius:13px; visibility:hidden; opacity:0; background:#f5f5f4; transition:opacity .15s ease; }
-    #ad-slot[data-visible="true"] { visibility:visible; opacity:1; }
-    #ad-slot iframe { display:block; width:100%; height:100%; border:0; }
+    #ad-slot { width:320px; height:100px; margin:15px auto 0; overflow:visible; border:0; border-radius:0; background:transparent; }
+    #ad-slot iframe { display:block; width:320px; height:100px; border:0; }
     .ad-placeholder { display:grid; width:100%; height:100%; place-items:center; color:#a8a29e; font-size:10px; font-weight:800; letter-spacing:.08em; }
     @media (max-width:390px) { .partner-grid { grid-template-columns:1fr; } }
+    @media (max-width:355px) { #ad-slot { margin-left:50%; transform:translateX(-50%); } }
     @media (max-height:760px) { .app { padding-top:12px; } .wheel-shell { width:min(58vw,240px); } .panel { margin-top:7px; padding:12px; } .wheel-area { margin:8px 0 5px; } }
     @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; } }
   </style>
@@ -147,7 +147,6 @@
         <div id="spin-live" hidden>
           <div class="spin-head"><span class="spin-title">🎮 룰렛 브레이크</span><span id="brake-label">0 / 5단계</span></div>
           <div id="brake-gauge" aria-label="감속 단계"></div>
-          <aside id="ad-slot" data-visible="false" aria-label="광고" aria-hidden="true"></aside>
           <p class="spin-help">룰렛을 클릭하거나 터치할 때마다 한 단계씩 느려져요</p>
         </div>
       </section>
@@ -156,6 +155,8 @@
         <button id="spin-button" type="button">이대로 돌리기</button>
         <button id="share-button" type="button" aria-label="현재 메뉴판 공유">공유</button>
       </div>
+
+      <aside id="ad-slot" aria-label="광고"></aside>
 
       <details class="history">
         <summary>최근 결과 보기</summary>
@@ -475,14 +476,14 @@
     function finishRoulette() {
       cancelAnimationFrame(animationFrameId); animationFrameId=0; velocity=0; isSpinning=false; wheelShell.classList.remove('is-spinning','brake-hit');
       const winner=state.items[selectedIndex()];
-      statusNode.textContent=`${winner} 당첨!`; cleanupAds(); playFinishTone(); onRouletteComplete(winner); renderState();
+      statusNode.textContent=`${winner} 당첨!`; cleanupSpinPanel(); playFinishTone(); onRouletteComplete(winner); renderState();
     }
 
     function startRouletteSequence() {
       if(isSpinning||state.items.length<2) return;
       cleanupRuntime(false); closeResult(); isSpinning=true; brakeStage=0; velocity=18+Math.random()*4; baseDeceleration=2.45+Math.random()*.15; deceleration=baseDeceleration;
       previousTime=performance.now(); spinStartedAt=previousTime; updateBrakeUI(); wheelShell.classList.add('is-spinning');
-      statusNode.textContent='빠르게 회전 중! 룰렛을 눌러 브레이크'; spinButton.disabled=true; spinButton.textContent='룰렛을 눌러 감속하세요'; showAds();
+      statusNode.textContent='빠르게 회전 중! 룰렛을 눌러 브레이크'; spinButton.disabled=true; spinButton.textContent='룰렛을 눌러 감속하세요'; showSpinPanel();
       animationFrameId=requestAnimationFrame(animationFrame);
     }
 
@@ -507,16 +508,19 @@
       [...brakeGauge.children].forEach((bar,index)=>bar.classList.toggle('active',index<brakeStage));
     }
 
-    function showAds() {
-      cleanupAds();
+    function showSpinPanel() {
+      cleanupSpinPanel();
       menuEditor.hidden=true; spinLive.hidden=false;
-      adSlot.dataset.visible='true'; adSlot.setAttribute('aria-hidden','false');
+    }
+
+    function renderAdfitBanner() {
+      if(adSlot.childElementCount) return;
       if(!/^DAN-[A-Za-z0-9]+$/.test(CONFIG.adfitUnitId)) {
         const placeholder=document.createElement('div'); placeholder.className='ad-placeholder'; placeholder.textContent='SPONSORED · 광고 슬롯'; adSlot.appendChild(placeholder); return;
       }
       const frame=document.createElement('iframe');
       frame.title='카카오 애드핏 광고'; frame.width='320'; frame.height='100';
-      frame.style.cssText='display:block;width:320px;max-width:100%;height:100px;border:0;margin:auto;overflow:hidden';
+      frame.style.cssText='display:block;width:320px;height:100px;border:0';
       frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox');
       frame.referrerPolicy='strict-origin-when-cross-origin';
       const unit=CONFIG.adfitUnitId;
@@ -524,9 +528,12 @@
       adSlot.appendChild(frame);
     }
 
-    function cleanupAds() {
-      adSlot.replaceChildren(); adSlot.dataset.visible='false'; adSlot.setAttribute('aria-hidden','true');
+    function cleanupSpinPanel() {
       menuEditor.hidden=false; spinLive.hidden=true;
+    }
+
+    function destroyAdfitBanner() {
+      adSlot.replaceChildren();
       for(const key of ['adfit','Tenping']) { try { window[key]=null; delete window[key]; } catch { window[key]=null; } }
     }
 
@@ -616,13 +623,13 @@
 
     function cleanupRuntime(resetStatus=true) {
       if(animationFrameId) cancelAnimationFrame(animationFrameId);
-      animationFrameId=0; isSpinning=false; velocity=0; previousTime=0; spinStartedAt=0; brakeStage=0; wheelShell.classList.remove('is-spinning','brake-hit'); updateBrakeUI(); cleanupAds(); spinButton.disabled=state.items.length<2;
+      animationFrameId=0; isSpinning=false; velocity=0; previousTime=0; spinStartedAt=0; brakeStage=0; wheelShell.classList.remove('is-spinning','brake-hit'); updateBrakeUI(); cleanupSpinPanel(); spinButton.disabled=state.items.length<2;
       if(resetStatus) statusNode.textContent='준비 완료';
     }
 
     function restoreNavigation() { cleanupRuntime(); closeResult(); state=readUrlState(); activePreset=sameItems(state.items,DEFAULT_ITEMS)?'추천':''; renderState(); }
 
-    renderPresets(); renderState(); renderCoupangBanner(); history.replaceState({title:state.title,items:[...state.items]},'',stateUrl(state));
+    renderPresets(); renderState(); renderAdfitBanner(); renderCoupangBanner(); history.replaceState({title:state.title,items:[...state.items]},'',stateUrl(state));
     $('#quick-add-form').addEventListener('submit',(event)=>{event.preventDefault();addItems(inputNode.value);});
     $('#reset-button').addEventListener('click',()=>commitState({title:DEFAULT_STATE.title,items:[...DEFAULT_STATE.items]},{preset:'추천',notice:'기본 메뉴로 초기화했어요'}));
     spinButton.addEventListener('click',startRouletteSequence);
@@ -639,10 +646,10 @@
     titleNode.addEventListener('blur',()=>{const title=safeText(titleNode.textContent,40)||DEFAULT_STATE.title;if(title!==state.title)commitState({title,items:state.items});else titleNode.textContent=state.title;});
     titleNode.addEventListener('paste',(event)=>{event.preventDefault();document.execCommand('insertText',false,safeText(event.clipboardData.getData('text/plain'),40));});
     window.addEventListener('popstate',restoreNavigation);
-    window.addEventListener('pageshow',(event)=>{if(event.persisted||isSpinning||spinButton.disabled)restoreNavigation();});
+    window.addEventListener('pageshow',(event)=>{renderAdfitBanner();if(event.persisted||isSpinning||spinButton.disabled)restoreNavigation();});
     window.addEventListener('resize',()=>{cancelAnimationFrame(resizeFrameId);resizeFrameId=requestAnimationFrame(()=>{resizeFrameId=0;rebakeWheel();});},{passive:true});
     window.addEventListener('orientationchange',()=>{cancelAnimationFrame(resizeFrameId);resizeFrameId=requestAnimationFrame(()=>{resizeFrameId=0;rebakeWheel();});},{passive:true});
-    window.addEventListener('pagehide',()=>{cleanupRuntime(false);if(audioContext){audioContext.close().catch(()=>{});audioContext=null;}bakedCanvas=null;});
+    window.addEventListener('pagehide',()=>{cleanupRuntime(false);destroyAdfitBanner();if(audioContext){audioContext.close().catch(()=>{});audioContext=null;}bakedCanvas=null;});
     window.startRouletteSequence=startRouletteSequence;
     window.onRouletteComplete=onRouletteComplete;
     document.fonts.ready.then(rebakeWheel).catch(()=>{});
