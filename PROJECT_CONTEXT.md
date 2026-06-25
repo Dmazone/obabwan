@@ -21,6 +21,7 @@
 - URL `title`, `items` 동기화와 `pushState`, `popstate`, `pageshow` 복구
 - 기본 상태 URL은 쿼리 없이 `/obabwan/` 유지
 - Pretendard Variable 웹폰트를 본문·제목·Canvas에 적용
+- 메뉴 후보 패널에서 `localStorage` 기반 내 목록 저장/불러오기/삭제를 지원하며, 현재 메뉴판은 `최근 사용 목록`으로 자동 저장
 
 ## 메뉴 프리셋
 
