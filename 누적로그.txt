@@ -196,3 +196,11 @@
 - 사용자 입력은 기존 `safeText`, `parseItems`, `textContent` 기반 렌더링을 사용해 DOM 삽입 시 XSS를 피하도록 유지했다.
 - 검증: 인라인 JavaScript UTF-8 추출 후 `node --check` 통과, 로컬 HTTP 200, 로컬 Chrome에서 저장/불러오기/삭제·룰렛 시작·광고 iframe 유지·콘솔 오류 0건 확인.
 - 커밋: `feat: add saved menu lists`
+
+[19] 메뉴 입력 구분자 즉시 추가
+-----------------------------
+- 메뉴 입력칸에서 쉼표, 줄바꿈, 슬래시, 파이프 문자가 입력되면 입력값을 즉시 파싱해 후보 태그로 추가하도록 했다.
+- `메뉴명,`처럼 입력하면 추가 버튼이나 엔터 없이 바로 후보에 들어가고 입력칸은 비워진다.
+- 안내 문구와 placeholder를 즉시 추가 동작에 맞게 수정했다.
+- 검증: 인라인 JavaScript UTF-8 추출 후 `node --check` 통과, 로컬 HTTP 200, 로컬 Chrome에서 `즉시추가검증,` 및 `줄바꿈검증/` 입력 즉시 추가·입력칸 초기화·광고 iframe 유지·콘솔 오류 0건 확인.
+- 커밋: `feat: add menus on delimiter input`

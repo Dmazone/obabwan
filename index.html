@@ -165,10 +165,10 @@
           <div id="preset-list" class="presets" aria-label="메뉴 프리셋"></div>
           <div id="menu-tags" aria-live="polite"></div>
           <form id="quick-add-form" class="quick-add">
-            <input id="menu-input" type="text" maxlength="180" placeholder="김치찌개, 초밥, 파스타 한 번에 입력" autocomplete="off" aria-label="추가할 메뉴">
+            <input id="menu-input" type="text" maxlength="180" placeholder="김치찌개, 입력하면 바로 추가" autocomplete="off" aria-label="추가할 메뉴">
             <button id="add-button" type="submit">추가</button>
           </form>
-          <p class="helper">쉼표·줄바꿈·슬래시로 여러 메뉴를 한꺼번에 추가할 수 있어요. 최대 10개.</p>
+          <p class="helper">쉼표를 쓰면 앞 단어가 바로 추가돼요. 줄바꿈·슬래시도 구분자로 쓸 수 있어요. 최대 10개.</p>
           <section class="saved-panel" aria-labelledby="saved-panel-title">
             <div class="saved-head">
               <h3 id="saved-panel-title" class="saved-title">내 목록 저장/불러오기</h3>
@@ -572,6 +572,10 @@
       commitState({title:state.title,items:merged},{preset:'',notice:`${merged.length-state.items.length}개 메뉴를 추가했어요`});
     }
 
+    function addItemsOnDelimiter() {
+      if(/[,\n/|]/.test(inputNode.value)) addItems(inputNode.value);
+    }
+
     function removeItem(index) {
       if(state.items.length<=2) { showToast('룰렛에는 메뉴가 최소 2개 필요해요'); return; }
       const items=state.items.filter((_,itemIndex)=>itemIndex!==index);
@@ -785,6 +789,7 @@
 
     renderPresets(); renderState(); autoSaveCurrentList(); renderAdfitBanner(); renderCoupangBanner(); history.replaceState({title:state.title,items:[...state.items]},'',stateUrl(state));
     $('#quick-add-form').addEventListener('submit',(event)=>{event.preventDefault();addItems(inputNode.value);});
+    inputNode.addEventListener('input',addItemsOnDelimiter);
     $('#save-list-form').addEventListener('submit',(event)=>{event.preventDefault();saveCurrentList(savedListNameNode.value);});
     $('#reset-button').addEventListener('click',()=>commitState({title:DEFAULT_STATE.title,items:[...DEFAULT_STATE.items]},{preset:'추천',notice:'기본 메뉴로 초기화했어요'}));
     spinButton.addEventListener('click',startRouletteSequence);
